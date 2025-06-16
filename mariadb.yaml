@@ -1,7 +1,6 @@
 ---
-
 - name: Validate and setup dynamic hosts
-  hosts: localhost  # Only runs on AWX server
+  hosts: localhost
   tasks:
     - name: Fail if no hosts provided
       fail:
@@ -12,9 +11,8 @@
       add_host:
         name: "{{ item }}"
         groups: mariadb_servers
-        # Explicitly set connection vars
         ansible_connection: ssh
-        ansible_user: vagrant  # Default user, override in survey if needed
+        ansible_user: vagrant
       loop: "{{ runtime_servers.split(',') }}"
 
 - name: Install Mariadb
@@ -44,13 +42,22 @@
         state: present
       when: ansible_os_family == "RedHat"
 
-    - name: Install Mariadb (RedHat)
+    - name: Add MariaDB YUM Repository (CentOS 7)
+      yum_repository:
+        name: MariaDB
+        description: MariaDB Repository
+        baseurl: http://yum.mariadb.org/10.5/centos7-amd64
+        gpgkey: https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+        gpgcheck: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Install MariaDB Server (RedHat)
       yum:
-        name: MariaDb-*
+        name: MariaDB-server
         state: present
       when: ansible_os_family == "RedHat"
 
-    - name: Enable and start Mariadb (RedHat)
+    - name: Start and enable MariaDB service (RedHat)
       systemd:
         name: mariadb
         state: started
