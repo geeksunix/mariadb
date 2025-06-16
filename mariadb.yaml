@@ -46,7 +46,7 @@
 
     - name: Install Mariadb (RedHat)
       yum:
-        name: mariadb
+        name: MariaDb-*
         state: present
       when: ansible_os_family == "RedHat"
 
