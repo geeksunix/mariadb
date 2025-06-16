@@ -11,7 +11,7 @@
     - name: Add dynamic hosts
       add_host:
         name: "{{ item }}"
-        groups: redis_servers
+        groups: mariadb_servers
         # Explicitly set connection vars
         ansible_connection: ssh
         ansible_user: vagrant  # Default user, override in survey if needed
