@@ -1,0 +1,58 @@
+---
+
+- name: Validate and setup dynamic hosts
+  hosts: localhost  # Only runs on AWX server
+  tasks:
+    - name: Fail if no hosts provided
+      fail:
+        msg: "No hosts specified! Use the survey to enter target servers."
+      when: runtime_servers == "unspecified"
+
+    - name: Add dynamic hosts
+      add_host:
+        name: "{{ item }}"
+        groups: redis_servers
+        # Explicitly set connection vars
+        ansible_connection: ssh
+        ansible_user: vagrant  # Default user, override in survey if needed
+      loop: "{{ runtime_servers.split(',') }}"
+
+- name: Install Mariadb
+  hosts: mariadb_servers
+  become: true
+  tasks:
+
+    - name: Install dependencies (Debian)
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - mariadb
+      when: ansible_os_family == "Debian"
+
+    - name: Enable and start Mariadb (Debian)
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install EPEL release (RedHat)
+      yum:
+        name: epel-release
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Mariadb (RedHat)
+      yum:
+        name: mariadb
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Enable and start Mariadb (RedHat)
+      systemd:
+        name: mariadb
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
